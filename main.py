@@ -1,7 +1,10 @@
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from collections import defaultdict
+from pathlib import Path
 import datetime
 import os
+
+
 from pprint import pprint
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 import pandas
@@ -24,16 +27,16 @@ def get_correct_word(year: int) -> str:
         word = 'лет'
     return word
 
-def get_last_file(file_names: list) -> str:
-    last_file = None
+def find_last_added_filename(file_names: list) -> str:
+    filename = None
     max_number = 0
     for fullname in file_names:
         name = fullname.split('.')[0]
         number = 1 if len(name) == 4 else int(name[4:])
         if number:
             max_number = number if max_number < number else max_number
-            last_file = fullname
-    return last_file
+            filename = fullname
+    return filename
 
 def main():
     env = Environment(
@@ -48,15 +51,15 @@ def main():
     
     file_names = os.listdir('wine_data/')
     try:
-        last_file = get_last_file(file_names)
+        filename = find_last_added_filename(file_names)
     except (ValueError, IndexError):
         raise ValueError("Некорректное имя файла в директории wine_data/")
 
-    filepath = 'wine_data/{}'.format(last_file)
-    read_file = pandas.read_excel(filepath, keep_default_na=False)
+    filepath = Path.cwd() / 'wine_data' / filename
+    file_read = pandas.read_excel(filepath, keep_default_na=False)
 
-    wine_categories = read_file['Категория'].to_list()
-    wines = read_file[:].loc[:, 'Название':].to_dict(orient='record')
+    wine_categories = file_read['Категория'].to_list()
+    wines = file_read[:].loc[:, 'Название':].to_dict(orient='record')
 
     sorted_wines = defaultdict(list)
     for category, wine in zip(wine_categories, wines):
