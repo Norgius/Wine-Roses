@@ -2,7 +2,7 @@ from http.server import HTTPServer, SimpleHTTPRequestHandler
 from collections import defaultdict
 import datetime
 import os
-
+from pprint import pprint
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 import pandas
 
@@ -24,15 +24,15 @@ def get_correct_word(year: int) -> str:
         word = 'лет'
     return word
 
-def get_latest_data(list_data_files: list) -> str:
+def get_last_file(file_names: list) -> str:
     last_file = None
     max_number = 0
-    for name_file in list_data_files:
-        name = name_file.split('.')[0]
-        digit = 1 if len(name) == 4 else int(name[4:])
-        if digit:
-            max_number = digit if max_number < digit else max_number
-            last_file = name_file
+    for fullname in file_names:
+        name = fullname.split('.')[0]
+        number = 1 if len(name) == 4 else int(name[4:])
+        if number:
+            max_number = number if max_number < number else max_number
+            last_file = fullname
     return last_file
 
 def main():
@@ -46,26 +46,25 @@ def main():
     company_age = get_age_company()
     correct_word = get_correct_word(company_age)
     
-    list_of_data_files = os.listdir('wine_data/')
+    file_names = os.listdir('wine_data/')
     try:
-        last_file = get_latest_data(list_of_data_files)
+        last_file = get_last_file(file_names)
     except (ValueError, IndexError):
         raise ValueError("Некорректное имя файла в директории wine_data/")
 
-    path_to_wine_data = 'wine_data/{}'.format(last_file)
-    wine_categories = pandas.read_excel(path_to_wine_data)['Категория'].tolist()
-    wine_info = pandas.read_excel(path_to_wine_data,
-                                    usecols=['Название', 'Сорт', 'Цена', 'Картинка', 'Акция'],
-                                    keep_default_na=False
-    ).to_dict(orient='record')
+    filepath = 'wine_data/{}'.format(last_file)
+    read_file = pandas.read_excel(filepath, keep_default_na=False)
 
-    wines_data = defaultdict(list)
-    for category, wine in zip(wine_categories, wine_info):
-        wines_data[category].append(wine)
+    wine_categories = read_file['Категория'].to_list()
+    wines = read_file[:].loc[:, 'Название':].to_dict(orient='record')
+
+    sorted_wines = defaultdict(list)
+    for category, wine in zip(wine_categories, wines):
+        sorted_wines[category].append(wine)
 
     rendered_page = template.render(
         years_together="Уже {} {} с вами".format(company_age, correct_word),
-        wines_data = wines_data,
+        sorted_wines = sorted_wines,
     )
 
     with open('index.html', 'w', encoding="utf8") as file:
