@@ -8,15 +8,12 @@ import pandas
 
 COMPANY_FOUNDATION_YEAR = 1920
 
-def get_the_age_company() -> int:
-    company_start_year = datetime.datetime(
-        year=COMPANY_FOUNDATION_YEAR, month=1, day=1
-    )
-    nowadays = datetime.datetime.now()
-    company_age = int((nowadays - company_start_year).days // 365.25)
+def get_age_company() -> int:
+    this_year = datetime.datetime.now().year
+    company_age = this_year - COMPANY_FOUNDATION_YEAR
     return company_age
 
-def get_the_correct_word(year: int) -> str:
+def get_correct_word(year: int) -> str:
     tenths = year % 10
     hundredths = year % 100
     if tenths == 1 and hundredths != 11:
@@ -27,10 +24,10 @@ def get_the_correct_word(year: int) -> str:
         word = 'лет'
     return word
 
-def get_latest_data(list_of_data_files: list) -> str:
+def get_latest_data(list_data_files: list) -> str:
     last_file = None
     max_number = 0
-    for name_file in list_of_data_files:
+    for name_file in list_data_files:
         name = name_file.split('.')[0]
         digit = 1 if len(name) == 4 else int(name[4:])
         if digit:
@@ -46,8 +43,8 @@ def main():
 
     template = env.get_template('template.html')
 
-    company_age = get_the_age_company()
-    correct_word = get_the_correct_word(company_age)
+    company_age = get_age_company()
+    correct_word = get_correct_word(company_age)
     
     list_of_data_files = os.listdir('wine_data/')
     try:
