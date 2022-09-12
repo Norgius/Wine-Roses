@@ -54,10 +54,10 @@ def main():
         raise ValueError("Некорректное имя файла в директории wine_data/")
 
     filepath = Path.cwd() / 'wine_data' / filename
-    file_read = pandas.read_excel(filepath, keep_default_na=False)
+    file_data = pandas.read_excel(filepath, keep_default_na=False)
 
-    wine_categories = file_read['Категория'].to_list()
-    wines = file_read[:].loc[:, 'Название':].to_dict(orient='record')
+    wine_categories = file_data['Категория'].to_list()
+    wines = file_data[:].loc[:, 'Название':].to_dict(orient='record')
 
     sorted_wines = defaultdict(list)
     for category, wine in zip(wine_categories, wines):
